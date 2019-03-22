@@ -13,6 +13,7 @@ const maintainerList: string[] = [
   'b-admike',
   'emonddr',
   'nabdelgadir',
+  'hacksparrow',
 ];
 
 export class QueryController {
