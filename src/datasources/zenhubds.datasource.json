@@ -1,0 +1,29 @@
+{
+  "name": "zenhubds",
+  "connector": "rest",
+  "baseURL": "https://api.zenhub.io/",
+  "crud": false,
+  "options": {
+    "headers": {
+      "accept": "application/json",
+      "content-type": "application/json",
+      "Authorization": "${ZENHUB_AUTH}",
+      "X-Authentication-Token": "${ZENHUB_AUTH}"
+    }
+  },
+  "operations": [
+    {
+      "template": {
+        "method": "GET",
+        "headers": {
+          "X-Authentication-Token": "${ZENHUB_AUTH}"
+        },
+        "url": "https://api.zenhub.io/p1/repositories/{repoId}/issues/{issueId}"
+      },
+      "functions": {
+        "getIssueDetails": ["repoId", "issueId"]
+      }
+    }
+  ]
+}
+

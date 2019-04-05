@@ -8,17 +8,36 @@
       "accept": "application/json",
       "content-type": "application/json",
       "User-Agent": "loopback4-github-analytics",
-      "Authorization": "${GHAUTH}"
+      "Authorization": "${GHAUTH}",
+      "X-RateLimit-Limit": 5000
     }
   },
   "operations": [
     {
       "template": {
         "method": "GET",
-        "url": "https://api.github.com/search/issues?q=repo:strongloop/loopback-next+is:pr+merged:{startdate}..{enddate}&per_page=100"
+        "url": "https://api.github.com/search/issues?q=repo:{repo}+is:{type}+{action}:{startdate}..{enddate}&per_page=100"
       },
       "functions": {
-        "getPRs": ["startdate", "enddate"]
+        "getPRs": ["repo", "type", "action", "startdate", "enddate"]
+      }
+    },
+    {
+      "template": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/{repo}"
+      },
+      "functions": {
+        "getRepoInfo": ["repo"]
+      }
+    },
+    {
+      "template": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/{repo}/issues/{issueNumber}/comments"
+      },
+      "functions": {
+        "getIssueCommentDetails": ["repo", "issueNumber"]
       }
     }
   ]

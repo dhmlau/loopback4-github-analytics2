@@ -15,3 +15,9 @@ To run:
 ```
 npm start
 ```
+
+## References
+
+Search qualifiers in GitHub, https://help.github.com/en/articles/searching-issues-and-pull-requests#search-within-a-users-or-organizations-repositories
+
+ZenHub API, https://github.com/ZenHubIO/API
