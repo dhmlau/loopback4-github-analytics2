@@ -7,7 +7,6 @@ import {
   PRInfo,
 } from '../services';
 import {get, param} from '@loopback/rest';
-import {promises} from 'fs';
 
 // Uncomment these imports to begin using these cool features!
 
@@ -81,25 +80,28 @@ export class QueryController {
 
     let metrics: FirstResponseMetrics = new FirstResponseMetrics();
     metrics.entries = [];
-
     let issueDetails: PRInfo[] = result.items;
 
-    issueDetails.forEach(async item => {
-      console.log('issueNumber = ', item.number);
+    for (const item of issueDetails) {
       let issueComments: IssueComment[] = await this.queryService.getIssueCommentDetails(
         repo,
         item.number.toString(),
       );
+
+      console.log('item=', item.number);
+      // if (issueComments.length > 0) {
       let issueCommentDetails: IssueCommentDetails = calculateFirstResponseDays(
         repo,
         item.number.toString(),
+        item.created_at,
         issueComments,
       );
       metrics = addCounterToFirstRespondEntry(metrics, issueCommentDetails);
-      console.log('!!!! metrics = ', metrics);
-    });
+      // console.log('!!!! metrics = ', metrics);
+      // }
+    }
 
-    console.log('#### metrics = ', metrics);
+    // console.log('#### metrics = ', metrics);
     return await metrics;
   }
 
@@ -163,21 +165,23 @@ export class QueryController {
     return repoInfo;
   }
 
-  @get('repo/{repo}/issueComments/{issueNumber}')
-  async getIssueDetails(
-    @param.path.string('repo') repo: string,
-    @param.path.string('issueNumber') issueNumber: string,
-  ): Promise<IssueCommentDetails> {
-    let result: IssueComment[] = await this.queryService.getIssueCommentDetails(
-      repo,
-      issueNumber,
-    );
-    return calculateFirstResponseDays(repo, issueNumber, result);
-  }
+  //   @get('repo/{repo}/issueComments/{issueNumber}')
+  //   async getIssueDetails(
+  //     @param.path.string('repo') repo: string,
+  //     @param.path.string('issueNumber') issueNumber: string,
+  //   ): Promise<IssueCommentDetails> {
+  //     let result: IssueComment[] = await this.queryService.getIssueCommentDetails(
+  //       repo,
+  //       issueNumber,
+  //     );
+  //     console.log('&&&&&&&&issueComments = ', result.length);
+  //     return calculateFirstResponseDays(repo, issueNumber, result);
+  //   }
 }
 function calculateFirstResponseDays(
   repo: string,
   issueNumber: string,
+  created_at: string,
   issueComments: IssueComment[],
 ): IssueCommentDetails {
   // let issueComments: IssueComment[] = await this.queryService.getIssueCommentDetails(
@@ -189,15 +193,16 @@ function calculateFirstResponseDays(
   issueCommentDetails.issueNumber = issueNumber;
 
   // Assume the issue comments are sorted by created_at date
-  let createDate: Date = new Date(issueComments[0].created_at);
+  let createDate: Date = new Date(created_at);
+  // let createDate: Date = new Date(issueComments[0].created_at);
   let firstRespondDate: Date = new Date();
-  if (issueComments[1]) {
-    firstRespondDate = new Date(issueComments[1].created_at);
-    let diff = Math.abs(firstRespondDate.getTime() - createDate.getTime());
-    issueCommentDetails.days_firstRespond = Math.ceil(
-      diff / (1000 * 3600 * 24),
-    );
+  // console.log('issueComments=', issueComments[0]);
+  if (issueComments.length !== 0) {
+    firstRespondDate = new Date(issueComments[0].created_at);
   }
+  let diff = Math.abs(firstRespondDate.getTime() - createDate.getTime());
+  issueCommentDetails.days_firstRespond = Math.ceil(diff / (1000 * 3600 * 24));
+  console.log('diff=', issueCommentDetails.days_firstRespond);
   return issueCommentDetails;
 }
 function addCounterToFirstRespondEntry(
@@ -205,27 +210,19 @@ function addCounterToFirstRespondEntry(
   issueCommentDetails: IssueCommentDetails,
 ): FirstResponseMetrics {
   let numOfDays = issueCommentDetails.days_firstRespond;
-
-  console.log('addCounterToFirstRespondEntry');
-  console.log('numOfDays = ', numOfDays);
-
   let found = false;
   metrics.entries.forEach(entry => {
     if (entry.num_of_days === numOfDays) {
       entry.num_of_issues++;
       found = true;
-      console.log('found');
     }
   });
   if (!found) {
-    console.log('not found');
     let entry: FirstResponseMetricsEntry = new FirstResponseMetricsEntry();
     entry.num_of_days = numOfDays;
     entry.num_of_issues = 1;
-    console.log('metrics.entries.length = ', metrics.entries.length);
     metrics.entries[metrics.entries.length] = entry;
   }
-  console.log('metrics = ', metrics);
   return metrics;
 }
 

@@ -57,6 +57,7 @@ export class PRInfo {
   state: string;
   user: GitHubUser;
   number: number;
+  created_at: string;
 }
 
 export class GitHubUser {
